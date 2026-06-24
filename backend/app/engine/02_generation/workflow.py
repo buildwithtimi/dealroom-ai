@@ -1,7 +1,7 @@
 # backend/app/engine/02_generation/workflow.py
 from llama_index.core.workflow import Workflow, step, StartEvent, StopEvent
 from llama_index.core.indices.vector_store import VectorStoreIndex
-from llama_index.llms.gemini import Gemini
+from llama_index.llms.google_genai import GoogleGenAI
 from llama_index.core import Settings
 import os
 import importlib
@@ -16,7 +16,7 @@ class DealRoomWorkflow(Workflow):
     def __init__(self, index: VectorStoreIndex, timeout: float = 60.0):
         super().__init__(timeout=timeout)
         self.index = index
-        self.llm = Gemini(
+        self.llm = GoogleGenAI(
             model_name="models/gemini-2.5-flash",
             api_key=os.environ.get("GOOGLE_API_KEY")
         )
