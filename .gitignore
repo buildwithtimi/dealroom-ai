@@ -234,3 +234,15 @@ backend/app/engine/data_workspace/*
 # IDE settings
 .vscode/
 .idea/
+# Local cache folders (Never commit these)
+.chroma_cache/
+.pytest_cache/
+__pycache__/
+.venv/
+
+# Local temporary test data
+sample_input_files/
+backend/app/engine/data_workspace/
+
+# Environment configurations (Optional but recommended if it contains local paths)
+.python-version
