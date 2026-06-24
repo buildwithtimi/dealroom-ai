@@ -6,7 +6,9 @@ from llama_index.core import StorageContext, load_index_from_storage
 from llama_index.core import Settings
 from llama_index.core.agent.workflow import FunctionAgent
 
-# 🟢 Imports the modern, non-deprecated Google GenAI unified SDK classes
+# 🟢 Import the dedicated memory management module
+from llama_index.core.memory import ChatMemoryBuffer
+
 from llama_index.embeddings.google_genai import GoogleGenAIEmbedding
 from llama_index.llms.google_genai import GoogleGenAI
 
@@ -30,35 +32,51 @@ async def main():
     dealroom_tool = get_dealroom_workflow_tool(index)
     tool_list = [dealroom_tool]
 
-    # 3. 🟢 Initialize the Orchestration Agent using the updated LLM class
+    # 3. Initialize the Orchestration Agent using the updated LLM class
     agent_llm = GoogleGenAI(
         model="gemini-2.5-flash",
         api_key=os.environ.get("GOOGLE_API_KEY")
     )
 
-    print("🤖 Initializing Workflows-backed FunctionAgent...")
+    # 4. 🟢 Allocate a token-capped conversational memory buffer
+    print("🧠 Initializing persistent Chat Memory Buffer...")
+    memory = ChatMemoryBuffer.from_defaults(token_limit=4000)
+
+    print("🤖 Initializing Workflows-backed FunctionAgent with Memory...")
     agent = FunctionAgent(
         tools=tool_list,
         llm=agent_llm,
+        memory=memory,  # 🟢 Hooking the memory engine directly into the agent lifecycle
         system_prompt=(
             "You are an elite financial due-diligence agent. Use your available tools "
-            "intelligently to discover precise company audit metrics."
+            "intelligently to discover precise company audit metrics. Pay close attention "
+            "to details in the chat history to resolve context over multi-turn conversations."
         )
     )
 
-    agent_query = (
+    # --- SIMULATED MULTI-TURN DIALOGUE ---
+
+    # 🚀 TURN 1: Explicit instruction requiring the Workflow tool
+    query_1 = (
         "Please look into the corporate files using your available tools. "
         "Find out what the current burn rate is and summarize what they are transforming."
     )
+    print(f"\n[TURN 1] 💬 User: '{query_1}'")
+    print("Thinking...")
     
-    print(f"\n🚀 Sending query to Agent: '{agent_query}'\n")
+    response_1 = await agent.run(user_msg=query_1)
+    print(f"✨ Agent Response 1:\n{response_1}\n")
+    print("-" * 50)
+
+    # 🚀 TURN 2: Contextual follow-up question
+    # This completely depends on memory to know what "that burn rate" means.
+    query_2 = "Based on that burn rate, if the company has a cash balance of $500,000, how many months of runway do they have left?"
+    print(f"\n[TURN 2] 💬 User: '{query_2}'")
+    print("Thinking (utilizing historical context)...")
     
-    response = await agent.run(user_msg=agent_query)
-    
-    print("\n✨ Agent's Final Consolidated Answer:")
-    print("--------------------------------------")
-    print(response)
-    print("--------------------------------------")
+    response_2 = await agent.run(user_msg=query_2)
+    print(f"✨ Agent Response 2:\n{response_2}\n")
+    print("-" * 50)
 
 if __name__ == "__main__":
     asyncio.run(main())
