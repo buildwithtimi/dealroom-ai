@@ -17,7 +17,7 @@ class DealRoomWorkflow(Workflow):
         super().__init__(timeout=timeout)
         self.index = index
         self.llm = GoogleGenAI(
-            model_name="models/gemini-2.5-flash",
+            model="models/gemini-2.5-flash",
             api_key=os.environ.get("GOOGLE_API_KEY")
         )
         Settings.llm = self.llm
